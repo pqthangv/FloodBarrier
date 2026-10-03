@@ -28,11 +28,12 @@ Heavy rain can flood homes in Vietnam. The flood barrier is activated by a pump,
 
 ```mermaid
 flowchart LR
-    gps["GPS module"] -->|location| esp["ESP32 controller"]
+    gps["GPS module"] -->|location| esp["ESP32 Mini (controller)"]
     rain["Rain sensor"] -->|wet / dry| esp
     esp -->|"current weather (HTTP)"| owm[("OpenWeatherMap API")]
     phone["Phone browser"] <-->|"dashboard + status (Wi-Fi)"| esp
-    esp -->|"on / off (Bluetooth HC-05)"| pump["Pump unit"]
+    esp -->|"on / off (Bluetooth, HC-05 ↔ HC-05)"| nano["Arduino Nano (pump unit)"]
+    nano -->|relay| pump["Pump"]
     pump -->|activates| barrier["Flood barrier"]
 ```
 
@@ -48,13 +49,26 @@ Every on/off command goes through one function, so the pump and the dashboard al
 
 ## Hardware
 
+The system has two parts that talk over Bluetooth: a **controller** that makes the decisions and a **pump unit** that switches the pump.
+
+**Controller**
+
 | Component | Role |
 |---|---|
-| ESP32 dev board | Main controller, Wi-Fi, web server |
+| ESP32 Mini | Main controller: Wi-Fi, web dashboard, weather check, run-time cutoff |
+| HC-05 Bluetooth module | Sends on/off commands to the pump unit |
 | GPS module (UART, 9600 baud) | Finds the location for the weather lookup |
 | Analog rain sensor | Detects rain locally |
-| HC-05 Bluetooth module | Wireless link to the pump unit |
-| Pump unit | Receives `1` / `0` over Bluetooth and switches the pump that activates the barrier |
+
+**Pump unit**
+
+| Component | Role |
+|---|---|
+| Arduino Nano | Receives `1` / `0` from its HC-05 and drives the relay |
+| HC-05 Bluetooth module | Paired with the controller's HC-05 |
+| Relay module | Switches the pump that activates the barrier |
+
+**Controller wiring**
 
 | ESP32 pin | Connected to |
 |---|---|
@@ -65,11 +79,11 @@ Every on/off command goes through one function, so the pump and the dashboard al
 | GPIO 0 (BOOT button) | Short press: show IP address · Hold 3 s: erase saved Wi-Fi |
 | GPIO 2 | Status LED |
 
-<!-- TODO: add a wiring diagram (docs/images/wiring.png) and the pump-unit firmware if you have it. -->
+<!-- TODO: add a wiring diagram (docs/images/wiring.png) and the Arduino Nano pump-unit sketch. -->
 
 ## Tech stack
 
-- **Firmware:** C++ (Arduino framework) on ESP32
+- **Firmware:** C++ (Arduino framework) on an ESP32 Mini (controller) and an Arduino Nano (pump unit)
 - **Libraries:** WiFiManager, TinyGPSPlus, EspSoftwareSerial, ESP32 `WebServer` / `HTTPClient`
 - **Web dashboard:** HTML, CSS and vanilla JavaScript, polling a JSON status endpoint
 - **Protocols:** HTTP/REST and JSON, UART (GPS NMEA), Bluetooth serial
@@ -82,7 +96,7 @@ Every on/off command goes through one function, so the pump and the dashboard al
 1. Install [Arduino IDE 2](https://www.arduino.cc/en/software).
 2. Go to **File → Preferences → Additional boards manager URLs** and add
    `https://espressif.github.io/arduino-esp32/package_esp32_index.json`
-3. In **Boards Manager**, install **esp32 by Espressif Systems**, then select **ESP32 Dev Module**.
+3. In **Boards Manager**, install **esp32 by Espressif Systems**, then select **ESP32 Dev Module** (this also works for ESP32 Mini boards).
 
 ### 2. Install the libraries
 
