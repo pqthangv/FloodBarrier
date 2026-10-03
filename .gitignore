@@ -1,0 +1,23 @@
+# .gitignore tells git which files to never track or upload.
+
+# --- Secrets: real API key + hotspot password (template: secrets.example.h)
+secrets.h
+
+# --- Build output (Arduino IDE / arduino-cli / PlatformIO)
+build/
+.pio/
+*.bin
+*.elf
+*.hex
+*.map
+
+# --- Editor / IDE settings
+.theia/
+.vscode/
+.idea/
+*.code-workspace
+
+# --- Operating system junk
+Thumbs.db
+desktop.ini
+.DS_Store
