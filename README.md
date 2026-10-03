@@ -1,6 +1,6 @@
-# FloodBarrier: Automatic Flood-Pump Controller (ESP32)
+# FloodBarrier: Automatic Flood Barrier Controller (ESP32)
 
-An ESP32 controller that checks the live weather and a local rain sensor, turns a flood pump on automatically during heavy rain, and lets families watch and control the pump from their phones.
+An ESP32 controller that activates a flood barrier automatically during heavy rain. It checks the live weather and a local rain sensor, switches on the pump that activates the barrier, and lets families watch and control it from their phones.
 
 **Used by 50+ households in Vietnam** · Built March – August 2025
 
@@ -8,18 +8,16 @@ An ESP32 controller that checks the live weather and a local rain sensor, turns 
 ![C++](https://img.shields.io/badge/C%2B%2B-firmware-00599C?logo=cplusplus&logoColor=white)
 ![OpenWeatherMap](https://img.shields.io/badge/API-OpenWeatherMap-EB6E4B)
 
-<!-- TODO: add a photo of an installed unit and a dashboard screenshot, e.g.
 <p align="center">
-  <img src="docs/images/installed-unit.jpg" width="45%" alt="Installed unit">
-  <img src="docs/images/dashboard.png" width="45%" alt="Phone dashboard">
+  <img src="docs/images/dashboard.png" width="25%" alt="Phone dashboard">
 </p>
--->
 
-Heavy rain can leave these households in Vietnam with water collecting around their homes, requiring a pump to keep flooding under control. Before FloodBarrier, families had to watch for rising water and switch the pump on and off themselves, which was difficult when nobody was home.
+
+Heavy rain can flood homes in Vietnam. The flood barrier is activated by a pump, and before this controller, families had to watch the weather and switch that pump on and off themselves. That was difficult when nobody was home.
 
 ## Features
 
-- **Automatic rain response.** The device checks live OpenWeatherMap data for its GPS location. If the API reports heavy rain and the local rain sensor is wet, the pump starts on its own. Nobody has to be home.
+- **Automatic barrier activation.** The device checks live OpenWeatherMap data for its GPS location. If the API reports heavy rain and the local rain sensor is wet, the pump starts and activates the barrier on its own. Nobody has to be home.
 - **Phone dashboard.** The ESP32 hosts a web page on the home Wi-Fi. It shows whether the pump is on and how long it has run, with buttons for on/off and reset and a setting for maximum run time.
 - **Run-time safety cutoff.** The pump stops automatically once it reaches the maximum run time set on the dashboard. The setting is saved to flash, so it survives power cuts.
 - **Wireless pump link.** The controller sends on/off commands to the pump unit over Bluetooth (HC-05).
@@ -35,13 +33,14 @@ flowchart LR
     esp -->|"current weather (HTTP)"| owm[("OpenWeatherMap API")]
     phone["Phone browser"] <-->|"dashboard + status (Wi-Fi)"| esp
     esp -->|"on / off (Bluetooth HC-05)"| pump["Pump unit"]
+    pump -->|activates| barrier["Flood barrier"]
 ```
 
 Main loop:
 
 1. Read the GPS module.
 2. Once there is a GPS fix, request the current weather from OpenWeatherMap every 10 minutes.
-3. If the API reports heavy rain (condition codes 202, 502–504 or 522) and the rain sensor reads wet, send `1` (on) to the pump unit.
+3. If the API reports heavy rain (condition codes 202, 502–504 or 522) and the rain sensor reads wet, send `1` (on) to the pump unit, which activates the barrier.
 4. While the pump runs, count the seconds. When the count reaches the maximum run time, send `0` (off). The pump then stays off until someone presses RESET on the dashboard.
 5. Serve the dashboard and handle button presses from phones.
 
@@ -55,7 +54,7 @@ Every on/off command goes through one function, so the pump and the dashboard al
 | GPS module (UART, 9600 baud) | Finds the location for the weather lookup |
 | Analog rain sensor | Detects rain locally |
 | HC-05 Bluetooth module | Wireless link to the pump unit |
-| Pump unit | Receives `1` / `0` over Bluetooth and switches the pump |
+| Pump unit | Receives `1` / `0` over Bluetooth and switches the pump that activates the barrier |
 
 | ESP32 pin | Connected to |
 |---|---|
